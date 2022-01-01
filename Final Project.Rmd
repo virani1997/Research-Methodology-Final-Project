@@ -1,0 +1,99 @@
+---
+title: Difference in Perception of High School Students From Three Cities of China on Effectiveness of Privacy Policies Education.
+author: "Salman Virani"
+date: "01/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## ANOVA (Analysis of Variance)
+
+I would like to test the perception of chinese high school students regarding the effectiveness of academic courses on website's privacy policy. In specific, I would like to test whether the perception scores vary significantly between major cities or not.
+
+Hypothetically, three random samples each of 100 high school students of China were taken, from Beijing, Shanghai and Nanjing, and asked to provide their personal opinion on the effectiveness of privacy policy academic courses at high school level. Each participant was asked to rate from a scale of 0 to 10, 0 meant no effectiveness and 10 meant highly effective. 5 was understood to be a neutral position. 
+```{r}
+# Load Packages
+library(car)
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+set.seed(9898)
+beijing <- sample(1:10,100,replace = T)
+a <- rep("beijing",100)
+beijing <- data.frame(cbind(beijing,a))
+names(beijing) <- c("score","city")
+str(beijing)
+
+shanghai <- sample(1:10,100,replace = T)
+b <- rep("shanghai",100)
+shanghai <- data.frame(cbind(shanghai,b))
+names(shanghai) <- c("score","city")
+
+nanjing <- sample(1:10,100,replace = T)
+c <- rep("nanjing", 100)
+nanjing <- data.frame(cbind(nanjing,c))
+names(nanjing) <- c("score","city")
+
+data <- rbind(beijing,shanghai,nanjing)
+data$city <- as.factor(data$city)
+data$score <- as.integer(data$score)
+table(data)
+str(data)
+
+hist(data$score, main = "Distribution of Scores Across All Participants", xlab = "Score", col = "red")
+
+```
+
+
+The above histogram shows the distribution of scores across all participants from Beijing, Shanghai, Nanjing.
+
+Now lets move towards the analysis of variance (ANOVA).
+
+Null Hypothesis (H0) is that population mean scores of Beijing, Shanghai, and Nanjing are statistically similar. Alternative Hypothesis (H1) is that at least one city's mean is not equal to the others.
+
+For ANOVA, F Statistic is used which is a one tailed test. 
+
+Before moving with the test lets check the conditions that should be met for the t-test.
+
+Q1. Is the sample random and independant? YES! The sample was randomly choosen without keeping any criteria in mind. And yes, the data is independent as 100 students are obviously less than 10% of all high school students in each city of China (Beijing, Nanjing, Shanghai)
+
+Q2. Is the sample skewed? If yes, then is the sample size large enough to tackle this issue? Yes, the sample is 100 which is way greater than the minimum requirement of 30.
+
+Q3. Is the criteria for homogeneity of variance satisfied? Lets check!
+
+```{r}
+leveneTest(score ~ city, data)
+```
+
+As we fail to reject the nul hypothesis (p-value > 0.05) we can assume the homogeneity of variance. As the conditions are met we can move forward with the ANOVA. Lets take a look at basic descriptive statistics first.
+
+```{r}
+data %>%
+        group_by(city) %>%
+        summarise(count = n(), mean = mean(score), standard_deviation = sd(score))
+
+ggplot(data = data, aes(x = city, y = score), ) + 
+        geom_boxplot(col = c("red","green","blue"))
+
+```
+
+The above box plot depicts the differing median and interquartile ranges between different cities. Now... The ANOVA!
+
+```{r}
+one.way <- aov(score ~ city, data = data)
+summary(one.way)
+```
+
+We see that the p_value is greater than 0.05, so at the 5% significance level, we fail to reject the null hypothesis. The mean scores between three cities are all statistically similar. 
+
+NOTE: The data inside variable ‘x’ is R generated random numbers, and different random numbers might give different results to the hypothesis test. set.seed function was used so the data dont change every time the function is run.
+
+The above work was based on one sample ANOVA and the required conditions (randomness, independence, sufficiently large sample size, and homogeniety of variance) were checked to use ANOVA. Although this work is based on hypothetical data, it completely portrays the workings required with a real data. The only missing piece of the puzzle is the real data collection from 100 high school students from each city  which can be conveniently done, ofcourse if you know Mandarin!
+
+Thank you very much for your time in reviewing my work. I am currently learning R Programming Language, and open to suggestions on improving my work.
